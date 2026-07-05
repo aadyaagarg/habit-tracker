@@ -1,41 +1,29 @@
 import { Header } from "./components/Header";
 import { HabitForm } from "./components/HabitForm";
-import { HabitList, type Habit } from "./components/HabitList";
+import { HabitList } from "./components/HabitList";
+import { Habitprovider } from "./context/HabitProvider";
 import { useState } from "react";
-import { isSameDay } from "date-fns";
+import { addWeeks, eachDayOfInterval, endOfWeek, startOfWeek } from "date-fns";
 
 export default function App() {
-  const [habits, setHabits] = useState<Habit[]>([]);
-  function addHabit(name: string) {
-    setHabits((curr) => [
-      ...curr,
-      { id: crypto.randomUUID(), name, completions: [new Date()] },
-    ]);
-  }
-  function deleteHabit(id: string) {
-    setHabits((curr) => curr.filter((h) => h.id != id));
-  }
-  function toggleHabit(id: string, date: Date) {
-    setHabits((curr) =>
-      curr.map((h) => {
-        if (h.id !== id) return h;
-        const alreadyDone = h.completions.some((c) => isSameDay(c, date));
-        const completions = alreadyDone
-          ? h.completions.filter((c) => !isSameDay(c, date))
-          : [...h.completions, date];
-        return { ...h, completions };
-      }),
-    );
-  }
+  const [weekOffset, setWeekOffset] = useState(0);
+  const week = addWeeks(new Date(), weekOffset);
+  const visibleDates = eachDayOfInterval({
+    start: startOfWeek(week, { weekStartsOn: 1 }),
+    end: endOfWeek(week, { weekStartsOn: 1 }),
+  });
+
   return (
     <div className="max-w-2xl mx-auto p-4 flex flex-col gap-4">
-      <Header></Header>
-      <HabitForm addHabit={addHabit}></HabitForm>
-      <HabitList
-        deleteHabit={deleteHabit}
-        toggleHabit={toggleHabit}
-        habits={habits}
-      ></HabitList>
+      <Habitprovider>
+        <Header
+          visibleDates={visibleDates}
+          onNext={() => setWeekOffset((o) => o + 1)}
+          onPrev={() => setWeekOffset((o) => o - 1)}
+        ></Header>
+        <HabitForm></HabitForm>
+        <HabitList visibleDates={visibleDates}></HabitList>
+      </Habitprovider>
     </div>
   );
 }

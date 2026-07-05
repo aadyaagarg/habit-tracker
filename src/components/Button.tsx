@@ -4,6 +4,7 @@ type Variant = "primary" | "secondary" | "ghost-destructive";
 type ButtonProps = {
   variant?: Variant;
 } & ComponentProps<"button">;
+
 export function Button({
   variant = "primary",
   className,
